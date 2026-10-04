@@ -5,7 +5,7 @@
 **功能**: Skill 使用反馈
 **分支**: `feature/skill-feedback-v1`
 **测试时间**: 2026-10-04
-**测试结果**: ✅ 全部通过 (4/4 e2e 测试, 25 API 测试)
+**测试结果**: ✅ 全部通过 (5/5 e2e 测试, 177 API 测试)
 
 ## 改动点
 
@@ -16,6 +16,7 @@
 
 2. **共享类型** (`packages/shared/src/skill.ts`)
    - 新增 `FeedbackStatus`、`SkillFeedbackInfo`、`CreateSkillFeedbackRequest`、`UpdateSkillFeedbackRequest` 等类型
+   - MySkill 接口增加 `pendingFeedbackCount` 字段
 
 3. **DTO** (`apps/server/src/skills/skills.dto.ts`)
    - 新增 `CreateSkillFeedbackDto`、`UpdateSkillFeedbackDto`、`SkillFeedbackQueryDto`
@@ -31,6 +32,9 @@
    - `PATCH /api/skills/:id/feedbacks/:feedbackId` - 更新反馈状态
    - `GET /api/skills/:id/feedbacks/pending-count` - 获取待处理数量
 
+6. **Skills Service** (`apps/server/src/skills/skills.service.ts`)
+   - `mine()` 方法增加待处理反馈数量统计
+
 ### 前端
 1. **Skill 详情页** (`apps/web/src/pages/SkillsPage.tsx`)
    - 新增"使用反馈"标签页，支持 `?tab=feedback` URL 参数
@@ -38,11 +42,16 @@
    - 反馈列表表格，支持状态筛选
    - 作者/管理员可看到状态管理按钮
 
-2. **e2e 测试** (`apps/web/e2e/feedback.spec.ts`)
+2. **我的 Skill 页** (`apps/web/src/pages/MySkillsPage.tsx`)
+   - 新增"待处理反馈"列，显示 Badge 数量
+   - 点击数量跳转到反馈标签页
+
+3. **e2e 测试** (`apps/web/e2e/feedback.spec.ts`)
    - 普通用户提交反馈
    - 作者管理反馈状态
    - 状态筛选功能
    - URL 参数切换标签
+   - 我的 Skill 显示待处理反馈数量
 
 ## 测试截图
 
@@ -94,6 +103,10 @@
 ![URL 参数切换](12-feedback-url-param.png)
 通过 `?tab=feedback` 参数直接切换到反馈标签。
 
+### 13. 我的 Skill 待处理反馈数量
+![我的 Skill 待处理反馈数量](13-my-skills-pending-count.png)
+"我的 Skill"页面显示待处理反馈数量，点击可跳转到反馈标签页。
+
 ## 测试命令
 
 ```bash
@@ -107,14 +120,16 @@ pnpm --filter @skill-hub/web test:e2e
 ## 测试结果
 
 - **API 测试**: 177 passed (包含 25 个反馈相关测试)
-- **浏览器测试**: 10 passed (包含 4 个反馈相关测试)
-- **总耗时**: ~50s
+- **浏览器测试**: 11 passed (包含 5 个反馈相关测试)
+- **总耗时**: ~55s
 
 ## 已知问题
 
 无
 
-## 后续工作
+## 完成状态
 
-- [ ] #03: 反馈状态管理 (已完成)
-- [ ] #04: "我的 Skill" 待处理数量列 (待实现)
+- [x] #01: 反馈数据模型与 API 基础
+- [x] #02: Skill 详情页反馈提交与查看
+- [x] #03: 反馈状态管理
+- [x] #04: 我的 Skill 待处理反馈入口
