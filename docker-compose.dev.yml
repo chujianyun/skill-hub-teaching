@@ -1,0 +1,19 @@
+name: skill-hub-teaching-dev
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: skill_hub_demo
+    ports:
+      - "127.0.0.1:${DB_PORT:-5434}:5432"
+    volumes:
+      - demo_dev_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d skill_hub_demo"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  demo_dev_db:

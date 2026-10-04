@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.env
+.git
+apps/server/src/generated
+apps/server/uploads
+apps/web/test-results
+apps/web/playwright-report
+
+**/uploads-private
+.spec-to-ship

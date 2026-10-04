@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.env
+*.log
+.DS_Store
+apps/server/src/generated/
+apps/server/uploads/
+apps/server/uploads-private/
+apps/web/test-results/
+apps/web/playwright-report/
+.env.production
+backups/
+.spec-to-ship/

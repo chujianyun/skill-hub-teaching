@@ -1,0 +1,218 @@
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  phone              String              @unique
+  name               String
+  nickname           String
+  email              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  sessions           Session[]
+  employees          Employee[]
+  skillReviewRecords SkillReviewRecord[]
+  superAdmin         SuperAdmin?
+}
+
+model SuperAdmin {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Session {
+  id              String   @id
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    currentTenantId String?
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum TenantStatus {
+  active
+  disabled
+}
+
+model Tenant {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  remark      String       @default("")
+  status      TenantStatus @default(active)
+  avatarUrl   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  departments Department[]
+  employees   Employee[]
+  skills      Skill[]
+  skillCategories SkillCategory[]
+}
+
+model Department {
+  id            String                   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant                   @relation(fields: [tenantId], references: [id])
+  parentId      String?
+  parent        Department?              @relation("DepartmentTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children      Department[]             @relation("DepartmentTree")
+  name          String
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  employees     Employee[]
+    visibleSkills SkillVisibleDepartment[]
+
+  @@unique([tenantId, parentId, name])
+  @@index([tenantId])
+}
+
+enum EmployeeStatus {
+  active
+  disabled
+}
+
+model Employee {
+  id            String                 @id @default(uuid())
+  userId        String
+  user          User                   @relation(fields: [userId], references: [id])
+  tenantId      String
+  tenant        Tenant                 @relation(fields: [tenantId], references: [id])
+  departmentId  String
+  department    Department             @relation(fields: [departmentId], references: [id])
+  status        EmployeeStatus         @default(active)
+  isTenantAdmin Boolean                @default(false)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  ownedSkills   Skill[]
+  skillVersions SkillVersion[]
+  visibleSkills SkillVisibleEmployee[]
+
+  @@unique([userId, tenantId])
+  @@index([tenantId])
+}
+
+model Skill {
+  id                 String                   @id @default(uuid())
+  tenantId           String
+  tenant             Tenant                   @relation(fields: [tenantId], references: [id])
+  name               String
+  ownerEmployeeId    String
+  owner              Employee                 @relation(fields: [ownerEmployeeId], references: [id])
+    visibility         SkillVisibility          @default(tenant)
+    unlisted           Boolean                  @default(false)
+    categoryId         String?
+  category           SkillCategory?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  visibleDepartments SkillVisibleDepartment[]
+  visibleEmployees   SkillVisibleEmployee[]
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  versions           SkillVersion[]
+  reviewRecords      SkillReviewRecord[]
+
+  @@unique([tenantId, name])
+  @@index([categoryId])
+}
+
+model SkillCategory {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  createdAt DateTime @default(now())
+  skills    Skill[]
+
+  @@unique([tenantId, name])
+}
+
+enum SkillVisibility {
+  tenant
+  departments
+  employees
+  private
+}
+
+model SkillVisibleDepartment {
+  skillId      String
+  skill        Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, departmentId])
+  @@index([departmentId])
+}
+
+model SkillVisibleEmployee {
+  skillId    String
+  skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, employeeId])
+  @@index([employeeId])
+}
+
+enum SkillVersionStatus {
+  draft
+  pending
+  published
+}
+
+model SkillVersion {
+  id                 String              @id @default(uuid())
+  skillId            String
+  skill              Skill               @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  major              Int
+  minor              Int
+  patch              Int
+    version            String
+  description        String
+  status             SkillVersionStatus
+  uploaderEmployeeId String
+  uploader           Employee            @relation(fields: [uploaderEmployeeId], references: [id])
+  uploadedAt         DateTime            @default(now())
+  storageKey         String
+  sizeBytes          Int
+  fileCount          Int
+    downloadCount      Int                 @default(0)
+  reviewRecords      SkillReviewRecord[]
+
+  @@unique([skillId, major, minor, patch])
+}
+
+enum SkillReviewAction {
+  publish_direct
+  submit
+  withdraw
+  approve
+  reject
+  reupload
+  change_visibility
+  change_category
+  unlist
+  relist
+}
+
+model SkillReviewRecord {
+  id          String            @id @default(uuid())
+  skillId     String
+  skill       Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  versionId   String?
+  version     SkillVersion?     @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  action      SkillReviewAction
+  actorUserId String
+  actor       User              @relation(fields: [actorUserId], references: [id])
+  comment     String            @default("")
+  createdAt   DateTime          @default(now())
+
+  @@index([skillId])
+}

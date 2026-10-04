@@ -1,0 +1,33 @@
+{
+  "name": "@skill-hub/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "pnpm check:tables && tsc --noEmit",
+    "test:e2e": "playwright test",
+    "check:tables": "node scripts/check-tables.mjs --self-test"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.4",
+    "@skill-hub/shared": "workspace:*",
+    "antd": "^6.6.5",
+    "fflate": "^0.8.3",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-markdown": "^10.1.0",
+    "react-router": "^7.18.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.6"
+  }
+}
