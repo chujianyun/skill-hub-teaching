@@ -13,6 +13,12 @@ import {
   type SkillVisibility,
   type SkillVisibilityInput,
   type UploadSkillRequest,
+  type FeedbackStatus,
+  FEEDBACK_TITLE_MAX_LENGTH,
+  FEEDBACK_DESCRIPTION_MAX_LENGTH,
+  FEEDBACK_RESOLUTION_MAX_LENGTH,
+  type CreateSkillFeedbackRequest,
+  type UpdateSkillFeedbackRequest,
 } from '@skill-hub/shared';
 import { Transform, Type } from 'class-transformer';
 import { IsArray, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
@@ -142,4 +148,43 @@ export class SkillManageQueryDto extends SkillListQueryDto implements SkillManag
   @IsOptional()
   @IsIn(['true', 'false'], { message: '是否下架不正确' })
   unlisted?: 'true' | 'false';
+}
+
+// ─── Skill Feedback DTOs ───
+
+const FEEDBACK_STATUSES: FeedbackStatus[] = ['pending', 'in_progress', 'resolved'];
+
+export class CreateSkillFeedbackDto implements CreateSkillFeedbackRequest {
+  @trim
+  @MaxLength(FEEDBACK_TITLE_MAX_LENGTH, { message: `标题不能超过 ${FEEDBACK_TITLE_MAX_LENGTH} 个字符` })
+  @IsNotEmpty({ message: '请填写问题标题' })
+  @IsString({ message: '请填写问题标题' })
+  title!: string;
+
+  @trim
+  @MaxLength(FEEDBACK_DESCRIPTION_MAX_LENGTH, { message: `描述不能超过 ${FEEDBACK_DESCRIPTION_MAX_LENGTH} 个字符` })
+  @IsNotEmpty({ message: '请填写问题描述' })
+  @IsString({ message: '请填写问题描述' })
+  description!: string;
+
+  @IsOptional()
+  @IsString({ message: '版本不正确' })
+  contextVersionId?: string;
+}
+
+export class UpdateSkillFeedbackDto implements UpdateSkillFeedbackRequest {
+  @IsIn(FEEDBACK_STATUSES, { message: '状态不正确' })
+  status!: FeedbackStatus;
+
+  @trim
+  @MaxLength(FEEDBACK_RESOLUTION_MAX_LENGTH, { message: `处理说明不能超过 ${FEEDBACK_RESOLUTION_MAX_LENGTH} 个字符` })
+  @IsOptional()
+  @IsString({ message: '请填写处理说明' })
+  resolution?: string;
+}
+
+export class SkillFeedbackQueryDto {
+  @IsOptional()
+  @IsIn(FEEDBACK_STATUSES, { message: '状态筛选不正确' })
+  status?: FeedbackStatus;
 }

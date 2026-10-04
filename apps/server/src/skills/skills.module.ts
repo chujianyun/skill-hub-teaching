@@ -3,6 +3,8 @@ import { StorageModule } from '../storage/storage.module';
 import { AdminSkillsController } from './admin-skills.controller';
 import { SkillCategoriesController } from './skill-categories.controller';
 import { SkillCategoriesService } from './skill-categories.service';
+import { SkillFeedbacksController } from './skill-feedbacks.controller';
+import { SkillFeedbacksService } from './skill-feedbacks.service';
 import { SkillReviewLinksController } from './skill-review-links.controller';
 import { SkillReviewLinksService } from './skill-review-links.service';
 import { SkillReviewsController } from './skill-reviews.controller';
@@ -12,8 +14,8 @@ import { SkillsService } from './skills.service';
 
 @Module({
   imports: [StorageModule],
-  // 固定路径的控制器在前：reviews、badges、review-links、categories 须先于 SkillsController 的 :id 匹配
-  controllers: [SkillReviewLinksController, SkillReviewsController, SkillCategoriesController, SkillsController, AdminSkillsController],
-  providers: [SkillsService, SkillReviewsService, SkillReviewLinksService, SkillCategoriesService],
+  // 固定路径的控制器在前：reviews、badges、review-links、categories、feedbacks 须先于 SkillsController 的 :id 匹配
+  controllers: [SkillReviewLinksController, SkillReviewsController, SkillCategoriesController, SkillFeedbacksController, SkillsController, AdminSkillsController],
+  providers: [SkillsService, SkillReviewsService, SkillReviewLinksService, SkillCategoriesService, SkillFeedbacksService],
 })
 export class SkillsModule {}

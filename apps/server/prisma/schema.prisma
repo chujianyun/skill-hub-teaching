@@ -81,6 +81,12 @@ enum EmployeeStatus {
   disabled
 }
 
+enum FeedbackStatus {
+  pending
+  in_progress
+  resolved
+}
+
 model Employee {
   id            String                 @id @default(uuid())
   userId        String
@@ -93,9 +99,11 @@ model Employee {
   isTenantAdmin Boolean                @default(false)
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
-  ownedSkills   Skill[]
-  skillVersions SkillVersion[]
-  visibleSkills SkillVisibleEmployee[]
+  ownedSkills      Skill[]
+  skillVersions    SkillVersion[]
+  visibleSkills    SkillVisibleEmployee[]
+  submittedFeedbacks SkillFeedback[] @relation("submittedFeedbacks")
+  resolvedFeedbacks  SkillFeedback[] @relation("resolvedFeedbacks")
 
   @@unique([userId, tenantId])
   @@index([tenantId])
@@ -118,6 +126,7 @@ model Skill {
   updatedAt          DateTime                 @updatedAt
   versions           SkillVersion[]
   reviewRecords      SkillReviewRecord[]
+  feedbacks          SkillFeedback[]
 
   @@unique([tenantId, name])
   @@index([categoryId])
@@ -185,6 +194,7 @@ model SkillVersion {
   fileCount          Int
     downloadCount      Int                 @default(0)
   reviewRecords      SkillReviewRecord[]
+  feedbackContexts   SkillFeedback[]
 
   @@unique([skillId, major, minor, patch])
 }
@@ -213,6 +223,26 @@ model SkillReviewRecord {
   actor       User              @relation(fields: [actorUserId], references: [id])
   comment     String            @default("")
   createdAt   DateTime          @default(now())
+
+  @@index([skillId])
+}
+
+model SkillFeedback {
+  id                  String         @id @default(uuid())
+  skillId             String
+  skill               Skill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  title               String
+  description         String
+  status              FeedbackStatus @default(pending)
+  submitterEmployeeId String
+  submitterEmployee   Employee       @relation("submittedFeedbacks", fields: [submitterEmployeeId], references: [id])
+  contextVersionId    String?
+  contextVersion      SkillVersion?  @relation(fields: [contextVersionId], references: [id])
+  resolverEmployeeId  String?
+  resolverEmployee    Employee?      @relation("resolvedFeedbacks", fields: [resolverEmployeeId], references: [id])
+  resolution          String?
+  createdAt           DateTime       @default(now())
+  resolvedAt          DateTime?
 
   @@index([skillId])
 }

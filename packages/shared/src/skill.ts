@@ -398,3 +398,45 @@ export interface UploadSkillRequest extends Partial<SkillVisibilityInput> {
   /** 分类（仅新建 Skill 时生效，可不选） */
   categoryId?: string;
 }
+
+// ─── Skill Feedback ───
+
+export type FeedbackStatus = 'pending' | 'in_progress' | 'resolved';
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
+  pending: '待处理',
+  in_progress: '处理中',
+  resolved: '已解决',
+};
+
+export const FEEDBACK_TITLE_MAX_LENGTH = 100;
+export const FEEDBACK_DESCRIPTION_MAX_LENGTH = 2000;
+export const FEEDBACK_RESOLUTION_MAX_LENGTH = 2000;
+
+export interface SkillFeedbackInfo {
+  id: string;
+  skillId: string;
+  title: string;
+  description: string;
+  status: FeedbackStatus;
+  submitterName: string;
+  contextVersion: string | null;
+  resolverName: string | null;
+  resolution: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface CreateSkillFeedbackRequest {
+  title: string;
+  description: string;
+  contextVersionId?: string;
+}
+
+export interface UpdateSkillFeedbackRequest {
+  status: FeedbackStatus;
+  resolution?: string;
+}
+
+export interface SkillFeedbackPendingCount {
+  count: number;
+}
