@@ -350,6 +350,7 @@ export interface MySkill {
   name: string;
   currentVersion: SkillVersionInfo | null;
   workingVersion: SkillWorkingVersion | null;
+  pendingFeedbackCount: number;
 }
 
 /** 待审核列表的一项 */

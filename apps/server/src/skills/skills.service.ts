@@ -214,10 +214,23 @@ export class SkillsService {
     });
     const working = skills.map((s) => s.versions.find((v) => v.status !== 'published')).filter((v): v is VersionRow => !!v);
     const comments = await rejectComments(this.prisma, working.map((v) => v.id));
+    const skillIds = skills.map((s) => s.id);
+    const pendingCounts = await this.prisma.skillFeedback.groupBy({
+      by: ['skillId'],
+      where: { skillId: { in: skillIds }, status: 'pending' },
+      _count: { id: true },
+    });
+    const countMap = new Map(pendingCounts.map((c) => [c.skillId, c._count.id]));
     return skills.map((s) => {
       const current = s.versions.find((v) => v.status === 'published');
       const draft = s.versions.find((v) => v.status !== 'published');
-      return { id: s.id, name: s.name, currentVersion: current ? toVersionInfo(current) : null, workingVersion: draft ? toWorkingVersion(draft, comments, viewer.employeeId) : null };
+      return {
+        id: s.id,
+        name: s.name,
+        currentVersion: current ? toVersionInfo(current) : null,
+        workingVersion: draft ? toWorkingVersion(draft, comments, viewer.employeeId) : null,
+        pendingFeedbackCount: countMap.get(s.id) ?? 0,
+      };
     });
   }
 

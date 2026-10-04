@@ -1,6 +1,6 @@
 import { UploadOutlined } from '@ant-design/icons';
 import type { MySkill } from '@skill-hub/shared';
-import { Alert, Button, Card, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Badge, Button, Card, Space, Table, Tag, Typography } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { api } from '../api';
@@ -69,6 +69,19 @@ export function MySkillsPage() {
                   <span>{s.workingVersion.version}</span>
                   <StatusTag status={s.workingVersion.status} rejected={!!s.workingVersion.rejectComment} />
                 </Space>
+              ) : (
+                <Typography.Text type="secondary">—</Typography.Text>
+              ),
+          },
+          {
+            title: '待处理反馈',
+            key: 'feedback',
+            width: 120,
+            render: (_, s) =>
+              s.pendingFeedbackCount > 0 ? (
+                <Link to={`${detailPath(s.id)}?tab=feedback`} relative="path">
+                  <Badge count={s.pendingFeedbackCount} overflowCount={99} />
+                </Link>
               ) : (
                 <Typography.Text type="secondary">—</Typography.Text>
               ),

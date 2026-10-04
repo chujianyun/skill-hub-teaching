@@ -173,4 +173,31 @@ test.describe('Skill 反馈功能', () => {
     await expect(page.getByText('提交反馈').first()).toBeVisible();
     await page.screenshot({ path: `${evidence}/12-feedback-url-param.png`, fullPage: true });
   });
+
+  test('我的 Skill 显示待处理反馈数量', async ({ page }) => {
+    // 管理员登录并上传 Skill
+    await login(page, '租户管理员');
+    await page.getByRole('button', { name: /上传 Skill$/ }).click();
+    await uploadSkill(page, 'feedback-count');
+    await expect(page).toHaveURL(/\/skills\/[a-z0-9-]+/);
+    
+    // 切换到反馈标签并提交反馈
+    await page.getByRole('tab', { name: '使用反馈' }).click();
+    const submitResponse = page.waitForResponse((r) => r.url().includes('/feedbacks') && r.request().method() === 'POST');
+    await page.getByPlaceholder('简要描述问题').fill('待处理的问题');
+    await page.getByPlaceholder('详细描述问题现象').fill('问题描述');
+    await page.getByRole('button', { name: '提交反馈' }).click();
+    await submitResponse;
+    
+    // 导航到我的 Skill 页面
+    await page.getByRole('menuitem', { name: '我的 Skill' }).click();
+    await expect(page).toHaveURL(/\/my-skills/);
+    await page.screenshot({ path: `${evidence}/13-my-skills-pending-count.png`, fullPage: true });
+    
+    // 验证待处理反馈数量显示
+    const skillRow = page.locator('[data-testid="my-skill-feedback-count"]');
+    await expect(skillRow).toBeVisible();
+    // 检查 Badge 显示数字 1
+    await expect(skillRow.locator('.ant-badge-count')).toContainText('1');
+  });
 });
