@@ -1,8 +1,9 @@
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
-import type { SkillCategory, SkillDetail, SkillListQuery, SkillReviewStep, SkillSummary, SkillVersionInfo, SkillVisibilityOptions } from '@skill-hub/shared';
-import { Alert, App, Button, Card, Descriptions, Popconfirm, Space, Table, Tabs, Tag, Tooltip, Typography } from 'antd';
+import type { FeedbackStatus, SkillCategory, SkillDetail, SkillFeedbackInfo, SkillListQuery, SkillReviewStep, SkillSummary, SkillVersionInfo, SkillVisibilityOptions } from '@skill-hub/shared';
+import { FEEDBACK_STATUS_LABELS } from '@skill-hub/shared';
+import { Alert, App, Button, Card, Descriptions, Form, Input, Popconfirm, Radio, Select, Space, Table, Tabs, Tag, Tooltip, Typography } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api } from '../api';
 import { useCurrentEmployee } from '../session';
 import { useSkillBadges } from '../skillBadges';
@@ -152,12 +153,15 @@ function SkillCatalog({ uploaders, categories }: { uploaders?: Uploaders; catego
 export function SkillDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isTenantAdmin = useCurrentEmployee()?.isTenantAdmin ?? false;
   const [skill, setSkill] = useState<SkillDetail>();
   const [error, setError] = useState<string>();
   const [upload, setUpload] = useState<UploadTarget>();
   const [editingVisibility, setEditingVisibility] = useState(false);
   const [editingCategory, setEditingCategory] = useState(false);
+
+  const activeTab = searchParams.get('tab') === 'feedback' ? 'feedback' : 'detail';
 
   const reload = useCallback(() => {
     api<SkillDetail>(`/skills/${id}`).then(
@@ -176,7 +180,8 @@ export function SkillDetailPage() {
 
   const canManage = !!skill && (skill.isOwner || isTenantAdmin);
   const version = skill?.currentVersion;
-  return (
+
+  const detailContent = (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       <Card
         loading={!skill && !error}
@@ -315,6 +320,19 @@ export function SkillDetailPage() {
         />
       )}
     </Space>
+  );
+
+  return (
+    <Card>
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setSearchParams(key === 'feedback' ? { tab: 'feedback' } : {})}
+        items={[
+          { key: 'detail', label: '详情', children: detailContent },
+          { key: 'feedback', label: '使用反馈', children: skill ? <SkillFeedbackTab skill={skill} canManage={canManage} /> : null },
+        ]}
+      />
+    </Card>
   );
 }
 
@@ -484,5 +502,187 @@ function VersionHistoryCard({ skill, canDelete, onDeleted }: { skill: SkillDetai
         ]}
       />
     </Card>
+  );
+}
+
+/** 反馈状态标签颜色 */
+const FEEDBACK_STATUS_COLORS: Record<FeedbackStatus, string> = {
+  pending: 'orange',
+  in_progress: 'blue',
+  resolved: 'green',
+};
+
+/** Skill 详情页的使用反馈标签 */
+function SkillFeedbackTab({ skill, canManage }: { skill: SkillDetail; canManage: boolean }) {
+  const { message, modal } = App.useApp();
+  const [form] = Form.useForm();
+  const [feedbacks, setFeedbacks] = useState<SkillFeedbackInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<FeedbackStatus | undefined>();
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadFeedbacks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const query = statusFilter ? `?status=${statusFilter}` : '';
+      const list = await api<SkillFeedbackInfo[]>(`/skills/${skill.id}/feedbacks${query}`);
+      setFeedbacks(list);
+    } catch (err) {
+      message.error((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [skill.id, statusFilter, message]);
+
+  useEffect(() => {
+    void loadFeedbacks();
+  }, [loadFeedbacks]);
+
+  const handleSubmit = async (values: { title: string; description: string; contextVersionId?: string }) => {
+    setSubmitting(true);
+    try {
+      await api(`/skills/${skill.id}/feedbacks`, {
+        method: 'POST',
+        body: values,
+      });
+      message.success('反馈已提交');
+      form.resetFields();
+      void loadFeedbacks();
+    } catch (err) {
+      message.error((err as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = (feedbackId: string, newStatus: FeedbackStatus) => {
+    if (newStatus === 'resolved') {
+      modal.confirm({
+        title: '标记为已解决',
+        content: (
+          <Form.Item label="处理说明" required style={{ marginTop: 16 }}>
+            <Input.TextArea id="resolution-input" rows={3} placeholder="请填写处理说明" />
+          </Form.Item>
+        ),
+        okText: '确认',
+        cancelText: '取消',
+        onOk: async () => {
+          const resolution = (document.getElementById('resolution-input') as HTMLTextAreaElement)?.value;
+          if (!resolution?.trim()) {
+            message.error('请填写处理说明');
+            return Promise.reject();
+          }
+          try {
+            await api(`/skills/${skill.id}/feedbacks/${feedbackId}`, {
+              method: 'PATCH',
+              body: { status: newStatus, resolution },
+            });
+            message.success('已标记为已解决');
+            void loadFeedbacks();
+          } catch (err) {
+            message.error((err as Error).message);
+          }
+        },
+      });
+    } else {
+      api(`/skills/${skill.id}/feedbacks/${feedbackId}`, {
+        method: 'PATCH',
+        body: { status: newStatus },
+      })
+        .then(() => {
+          message.success('状态已更新');
+          void loadFeedbacks();
+        })
+        .catch((err) => message.error((err as Error).message));
+    }
+  };
+
+  const columns = [
+    {
+      title: '状态',
+      dataIndex: 'status',
+      width: 100,
+      render: (status: FeedbackStatus) => <Tag color={FEEDBACK_STATUS_COLORS[status]}>{FEEDBACK_STATUS_LABELS[status]}</Tag>,
+    },
+    { title: '标题', dataIndex: 'title', ellipsis: true },
+    { title: '提交人', dataIndex: 'submitterName', width: 100 },
+    {
+      title: '上下文版本',
+      dataIndex: 'contextVersion',
+      width: 120,
+      render: (v: string | null) => (v ? <Tag>{v}</Tag> : '-'),
+    },
+    { title: '提交时间', dataIndex: 'createdAt', width: 160, render: formatTime },
+    ...(canManage
+      ? [
+          {
+            title: '操作',
+            key: 'actions',
+            width: 150,
+            render: (_: unknown, row: SkillFeedbackInfo) => {
+              if (row.status === 'resolved') return null;
+              return (
+                <Space>
+                  {row.status === 'pending' && (
+                    <Button size="small" onClick={() => handleStatusChange(row.id, 'in_progress')}>
+                      标记处理中
+                    </Button>
+                  )}
+                  <Button size="small" type="primary" onClick={() => handleStatusChange(row.id, 'resolved')}>
+                    标记已解决
+                  </Button>
+                </Space>
+              );
+            },
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Card title="提交反馈" size="small">
+        <Form form={form} layout="vertical" onFinish={(v) => void handleSubmit(v)}>
+          <Form.Item name="title" label="问题标题" rules={[{ required: true, message: '请填写问题标题' }]}>
+            <Input placeholder="简要描述问题" maxLength={100} />
+          </Form.Item>
+          <Form.Item name="description" label="问题描述" rules={[{ required: true, message: '请填写问题描述' }]}>
+            <Input.TextArea rows={3} placeholder="详细描述问题现象、复现步骤等" maxLength={2000} />
+          </Form.Item>
+          <Form.Item name="contextVersionId" label="相关版本（可选）">
+            <Select placeholder="不指定" allowClear>
+              {skill.versions.map((v) => (
+                <Select.Option key={v.id} value={v.id}>
+                  {v.version}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={submitting}>
+              提交反馈
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+      <Card title="反馈列表" size="small">
+        <div style={{ marginBottom: 16 }}>
+          <Radio.Group value={statusFilter ?? 'all'} onChange={(e) => setStatusFilter(e.target.value === 'all' ? undefined : e.target.value)}>
+            <Radio.Button value="all">全部</Radio.Button>
+            <Radio.Button value="pending">待处理</Radio.Button>
+            <Radio.Button value="in_progress">处理中</Radio.Button>
+            <Radio.Button value="resolved">已解决</Radio.Button>
+          </Radio.Group>
+        </div>
+        <Table<SkillFeedbackInfo>
+          rowKey="id"
+          loading={loading}
+          dataSource={feedbacks}
+          columns={columns}
+          pagination={false}
+          locale={{ emptyText: '暂无反馈' }}
+        />
+      </Card>
+    </Space>
   );
 }
