@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: server/skills
+title: 技能（Skill）资源与版本管理
+scope:
+    - apps/server/src/skills/
+source_files: []
+depends_on: []
+related_to:
+    - path: server/prisma
+    - path: server/storage
+    - path: web

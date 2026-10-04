@@ -12,3 +12,4 @@ apps/web/playwright-report/
 .env.production
 backups/
 .spec-to-ship/
+配图/

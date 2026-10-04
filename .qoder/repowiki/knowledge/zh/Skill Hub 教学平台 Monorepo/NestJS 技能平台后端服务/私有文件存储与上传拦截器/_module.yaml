@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: server/storage
+title: 私有文件存储与上传拦截器
+scope:
+    - apps/server/src/storage/
+source_files: []
+depends_on: []
+related_to:
+    - path: server/skills

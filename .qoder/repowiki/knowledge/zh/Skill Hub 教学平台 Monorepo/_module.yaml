@@ -1,0 +1,18 @@
+schema_version: 1
+module_path: ""
+title: Skill Hub 教学平台 Monorepo
+scope:
+    - README.md
+    - AGENTS.md
+    - .gitignore
+    - .dockerignore
+    - package.json
+    - pnpm-workspace.yaml
+    - pnpm-lock.yaml
+    - tsconfig.base.json
+    - docker-compose.yml
+    - docker-compose.dev.yml
+    - .env.example
+source_files: []
+depends_on: []
+related_to: []

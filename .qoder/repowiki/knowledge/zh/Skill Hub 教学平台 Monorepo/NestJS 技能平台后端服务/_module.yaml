@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: server
+title: NestJS 技能平台后端服务
+scope:
+    - apps/server/
+source_files: []
+depends_on: []
+related_to: []

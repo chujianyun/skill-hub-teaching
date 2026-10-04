@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: server/auth
+title: 认证与会话管理模块
+scope:
+    - apps/server/src/auth/
+source_files: []
+depends_on: []
+related_to:
+    - path: web

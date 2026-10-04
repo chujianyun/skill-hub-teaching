@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: web
+title: Skill Hub Web 前端应用
+scope:
+    - apps/web/
+source_files: []
+depends_on: []
+related_to:
+    - path: server/auth
+    - path: server/skills
+    - path: shared_package

@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: server/health_and_seed
+title: 健康检查与演示数据种子
+scope:
+    - apps/server/src/health/
+    - apps/server/src/seed/
+source_files: []
+depends_on: []
+related_to: []

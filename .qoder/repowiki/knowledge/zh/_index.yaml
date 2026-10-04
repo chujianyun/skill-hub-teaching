@@ -1,0 +1,132 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: main
+nodes_managed: true
+exported_at: "2026-10-04T12:43:10Z"
+modules:
+    "":
+        dir_name: Skill Hub 教学平台 Monorepo
+        title: Skill Hub 教学平台 Monorepo
+        scope:
+            - README.md
+            - AGENTS.md
+            - .gitignore
+            - .dockerignore
+            - package.json
+            - pnpm-workspace.yaml
+            - pnpm-lock.yaml
+            - tsconfig.base.json
+            - docker-compose.yml
+            - docker-compose.dev.yml
+            - .env.example
+        source_files: []
+        children:
+            - scripts_and_docs
+            - server
+            - shared_package
+            - web
+        depends_on: []
+        related_to: []
+    scripts_and_docs:
+        dir_name: 开发脚本、验收文档与示例 Skill
+        title: 开发脚本、验收文档与示例 Skill
+        scope:
+            - scripts/
+            - docs/
+            - examples/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: server/prisma
+    server:
+        dir_name: NestJS 技能平台后端服务
+        title: NestJS 技能平台后端服务
+        scope:
+            - apps/server/
+        source_files: []
+        children:
+            - server/auth
+            - server/health_and_seed
+            - server/prisma
+            - server/skills
+            - server/storage
+        depends_on: []
+        related_to: []
+    server/auth:
+        dir_name: 认证与会话管理模块
+        title: 认证与会话管理模块
+        scope:
+            - apps/server/src/auth/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: web
+    server/health_and_seed:
+        dir_name: 健康检查与演示数据种子
+        title: 健康检查与演示数据种子
+        scope:
+            - apps/server/src/health/
+            - apps/server/src/seed/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    server/prisma:
+        dir_name: Prisma 数据层与数据库 Schema
+        title: Prisma 数据层与数据库 Schema
+        scope:
+            - apps/server/src/prisma/
+            - apps/server/prisma/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: scripts_and_docs
+            - path: server/skills
+    server/skills:
+        dir_name: 技能（Skill）资源与版本管理
+        title: 技能（Skill）资源与版本管理
+        scope:
+            - apps/server/src/skills/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: server/prisma
+            - path: server/storage
+            - path: web
+    server/storage:
+        dir_name: 私有文件存储与上传拦截器
+        title: 私有文件存储与上传拦截器
+        scope:
+            - apps/server/src/storage/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: server/skills
+    shared_package:
+        dir_name: Skill Hub 共享类型与常量库
+        title: Skill Hub 共享类型与常量库
+        scope:
+            - packages/shared/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: web
+    web:
+        dir_name: Skill Hub Web 前端应用
+        title: Skill Hub Web 前端应用
+        scope:
+            - apps/web/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: server/auth
+            - path: server/skills
+            - path: shared_package

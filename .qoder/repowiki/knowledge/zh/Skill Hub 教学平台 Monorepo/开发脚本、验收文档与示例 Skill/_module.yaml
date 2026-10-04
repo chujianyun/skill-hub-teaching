@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: scripts_and_docs
+title: 开发脚本、验收文档与示例 Skill
+scope:
+    - scripts/
+    - docs/
+    - examples/
+source_files: []
+depends_on: []
+related_to:
+    - path: server/prisma

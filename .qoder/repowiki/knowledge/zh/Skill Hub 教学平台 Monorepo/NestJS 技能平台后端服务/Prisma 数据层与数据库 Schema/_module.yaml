@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: server/prisma
+title: Prisma 数据层与数据库 Schema
+scope:
+    - apps/server/src/prisma/
+    - apps/server/prisma/
+source_files: []
+depends_on: []
+related_to:
+    - path: scripts_and_docs
+    - path: server/skills
